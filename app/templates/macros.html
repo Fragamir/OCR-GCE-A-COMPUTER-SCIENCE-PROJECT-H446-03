@@ -1,0 +1,177 @@
+{# render_field(field, placeholder="example@email.com", type="email #}
+{%  macro render_field(field, label_visible=true) %}
+    <div class="form-label-group {% if field.errors %}has-error{% endif %} {{ kwargs.pop('class_', '') }}">
+    {# show class_ kwargs in the div, and remove from kwargs after #}
+        {{ field(class_="form-control", **kwargs) }}
+        {% if field.type != "HiddenField" and field.type != "CSRFTokenField" and label_visible==true %}
+            <label for="{{ field.id }}" class="control-label">{{ field.label }}:
+                {% if field.flags.required %}<span style="color: red;">*</span>{% endif %}
+            </label>
+        {% endif %}
+        {% if field.errors %}
+            {% for error in field.errors %}
+                <div class="card-alert alert alert-danger">
+                    <strong>Error!</strong> {{ error }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+{% endmacro %}
+
+{% macro render_checkbox(field) %}
+    <div class="custom-control custom-checkbox mb-3">
+        {{ field(type="checkbox", class_="custom-control-input", **kwargs) }}
+        <label class="custom-control-label" for="{{ field.id }}">{{ field.label }}
+            {% if field.flags.required %}<span style="color: red;">*</span>{% endif %}
+        </label>
+        {% if field.errors %}
+            {% for error in field.errors %}
+                <div class="card-alert alert alert-danger">
+                    <strong>Error!</strong> {{ error }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+{% endmacro %}
+
+{% macro render_form(form, action_url="", action_text="Submit", class_="", btn_class="btn btn-default") %}
+    <form method="POST" action="{{ action_url }}" role="form" class="{{ class_ }}">
+        {{ form.csrf_token }}
+        {% for field in form %}
+            {% if field.type == "BooleanField" %}
+                {{ render_checkbox(field) }}
+            {% else %}
+                {{ render_field(field) }}
+            {% endif %}
+        {% endfor %}
+        <button type="submit" class="{{ btn_class }}">{{ action_text }}</button>
+    </form>
+{% endmacro %}
+
+{% macro render_graph(m) %}
+    <div id="chartContainer{{ m.id }}" style="height: 370px; width: 100%;"></div>
+    <script>
+        window.onload = function () {
+            let dataSeries1 = [];
+            let dataSeries2 = [];
+            let dataSeries3 = [];
+
+            let options = {
+                exportEnabled: true,
+                animationEnabled: true,
+                title: {
+                    text: "Usage statistics for {% if m.nickname %}{{ m.nickname }}{% endif %}(#{{ m.id }})"
+                },
+                axisX: {
+                    title: "Time"
+                },
+                axisY: [{
+                    title: "Memory usage",
+                    titleFontColor: "#4F81BC",
+                    lineColor: "#4F81BC",
+                    labelFontColor: "#4F81BC",
+                    tickColor: "#4F81BC",
+                    includeZero: true,
+                    viewportMaximum: 100,
+                    suffix: "%"
+                },{
+                    title: "CPU usage",
+                    titleFontColor: "#C0504E",
+                    lineColor: "#C0504E",
+                    labelFontColor: "#C0504E",
+                    tickColor: "#C0504E",
+                    includeZero: true,
+                    viewportMaximum: 100,
+                    suffix: "%"
+                }],
+                axisY2: {
+                    title: "Disk usage",
+                    titleFontColor: "#32C030",
+                    lineColor: "#32C030",
+                    labelFontColor: "#32C030",
+                    tickColor: "#32C030",
+                    includeZero: true,
+                    viewportMaximum: 100,
+                    suffix: "%"
+                },
+                toolTip: {
+                    shared: true
+                },
+                legend: {
+                    cursor: "pointer",
+                    itemclick: toggleDataSeries
+                },
+                data: [{
+                    type: "spline",
+                    name: "CPU usage",
+                    axisYIndex: 1,
+                    xValueType: "dateTime",
+                    showInLegend: true,
+                    dataPoints: dataSeries1
+                },
+                {
+                    type: "spline",
+                    name: "Disk usage",
+                    axisYIndex: 0,
+                    xValueType: "dateTime",
+                    showInLegend: true,
+                    dataPoints: dataSeries2
+                },
+                {
+                    type: "spline",
+                    name: "Memory usage",
+                    axisYType: "secondary",
+                    xValueType: "dateTime",
+                    showInLegend: true,
+                    dataPoints: dataSeries3
+                }]
+            };
+            const chartContainer = $("#chartContainer{{ m.id }}");
+            chartContainer.CanvasJSChart(options);
+            const chart = chartContainer.CanvasJSChart();
+
+            function toggleDataSeries(e) {
+                e.dataSeries.visible = !(typeof (e.dataSeries.visible)==="undefined" || e.dataSeries.visible);
+                e.chart.render();
+            }
+
+            let firstRequest = true;
+            let previousRequest = "";
+
+            function addData(data) {
+                if (firstRequest === true) {
+                    $.each(data, function (key, value) {
+                        dataSeries1.push({x: value[0], y: value[1]});
+                        dataSeries2.push({x: value[0], y: value[2]});
+                        dataSeries3.push({x: value[0], y: value[3]});
+                        firstRequest = false;
+                    });
+                } else if (typeof (data[9]) === "undefined" && previousRequest !== data.toString()) {
+                    let val = data[data.length - 1];
+                    dataSeries1.push({x: val[0], y: val[1]});
+                    dataSeries2.push({x: val[0], y: val[2]});
+                    dataSeries3.push({x: val[0], y: val[3]});
+                } else {
+                    if (previousRequest.toString() !== data.toString()) {
+                        dataSeries1.push({x: data[9][0], y: data[9][1]});
+                        dataSeries2.push({x: data[9][0], y: data[9][2]});
+                        dataSeries3.push({x: data[9][0], y: data[9][3]});
+                        dataSeries1.shift();
+                        dataSeries2.shift();
+                        dataSeries3.shift();
+                    }
+                }
+                previousRequest = data;
+                chart.render();
+                setTimeout(updateData, 15000)
+            }
+
+            function updateData() {
+                $.getJSON("../m/{{ m.id }}").done(addData)
+            }
+
+            updateData();
+
+        };
+    </script>
+{% endmacro %}

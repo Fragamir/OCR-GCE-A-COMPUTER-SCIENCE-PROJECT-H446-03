@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% include "_navbar.html" %}
+{% import "macros.html" as macross %}
+
+{% block header %}
+<link rel="stylesheet" href="../static/forms.css">
+{% endblock %}
+
+{% block container %}
+
+    <div class="row">
+        <div class="col-sm-9 col-md-7 col-lg-5 mx-auto card-container">
+            <div class="card card-signin my-5">
+                <div class="card-body">
+                    <h5 class="card-title text-center">
+                        Sign In
+                    </h5>
+                    {{ macross.render_form(form, action_text="Sign In", class_="form-signin", btn_class="btn btn-lg btn-primary btn-block text-uppercase") }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

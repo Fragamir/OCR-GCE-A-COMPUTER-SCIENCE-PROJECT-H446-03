@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% include "_navbar.html" %}
+{% import "macros.html" as macros %}
+
+{% block header %}
+<link rel="stylesheet" href="../static/dashboard.css">
+{% endblock  %}
+
+{% block container %}
+
+    <div class="row mt-2">
+        <div class="col-lg-9 mx-auto card-container">
+            {% if current_user.pending_machines.__len__() > 0 %}
+                <div class="card card-main my-3 border border-secondary" id="pending">
+                    <div class="card-body">
+                        <h5 class="card-title text-center">
+                            Pending Machines
+                        </h5>
+                        {% for machine in current_user.pending_machines %}
+                            <div class="card card-body my-4 border border-warning MachineRep" id="divm{{ machine.id }}">
+                                Machine id: {{ machine.id }}
+                                {% if machine.nickname %}
+                                <br>Machine nickname: {{ machine.nickname }}
+                                {% endif %}
+                                <input class="btn btn-primary" type="submit" value="Accept" id="addm{{ machine.id }}">
+                                <input class="btn btn-danger" type="submit" value="Decline" id="remm{{ machine.id }}">
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+            {% if machines %}
+                <div class="card card-main my-4 border border-primary">
+                    <div class="card-body">
+                        <div class="card-title text-center">Dashboard:</div>
+                        {% for machine in machines %}
+                        <div class="card card-main mt-3">
+                            <div class="card-body">
+                                <div id="chartContainer{{ machine.id }}" style="height: 370px; width: 100%;"></div>
+                                <a class="btn btn-primary mt-4" style="width: 100%" href="../m-more/{{ machine.id }}" role="button">More...</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+            <div class="card my-4 border border-info">
+                <div class="card-body">
+                    <div class="card-title text-center display-4">
+                        Adding new machines:
+                    </div>
+                    <p>
+                        To add a new machine first install the <a href="../../../Conduit.exe">Conduit.exe</a> executable on
+                        the server to be monitored, then run it with the setup argument ("Conduit.exe -- setup") It will then
+                        ask you to enter your username and will allow you to set a nickname for the machine. Once completed
+                        update the config as needed and run the script again and accept it on this page.<br><br>
+                        <sub class="text-black-50">
+                            Note: you can specify the interval time with --interval TIME (this works best in multiples
+                            of 15), and you may also specify the config directory with --config.
+                        </sub>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<script type="text/javascript" src="https://canvasjs.com/assets/script/jquery-1.11.1.min.js"></script>
+<script type="text/javascript" src="https://canvasjs.com/assets/script/jquery.canvasjs.min.js"></script>
+<script type="text/javascript">
+const host = window.location.pathname;
+
+{% for machine in current_user.pending_machines %}
+
+$("#addm{{ machine.id }}").click(function () {
+    $.post(host+"../../../accept_pending",
+        { machine_id:{{ machine.id }},
+            user_id:{{ current_user.id }}
+        });
+    location.reload()
+});
+
+$("#remm{{ machine.id }}").click(function () {
+    $.post(host+"../../../decline_pending",
+        { machine_id:{{ machine.id }},
+            user_id:{{ current_user.id }}
+        });
+    location.reload()
+});
+
+{% endfor %}
+</script>
+
+<script src="../static/graph.js" type="text/javascript"></script>
+<script type="text/javascript">
+$(function () {
+    {% for machine in machines %}
+        {% if not machine.nickname %}
+            CreateGraph({{ machine.id }}, null);
+        {% else %}
+            CreateGraph({{ machine.id }},"{{ machine.nickname }}");
+        {% endif %}
+    {% endfor %}
+})
+
+</script>
+
+{% endblock %}

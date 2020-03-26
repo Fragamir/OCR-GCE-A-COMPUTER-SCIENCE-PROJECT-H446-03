@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% include "_navbar.html" %}
+
+{% block header %}
+
+    <link rel="stylesheet" href="../static/dashboard.css">
+
+{% endblock %}
+
+{% block container %}
+
+    <div class="row mt-2">
+        <div class="col-lg-9 mx-auto card-container">
+            <div class="card card-main my-3 p-3 border border-primary">
+                <div class="card my-3 border border-secondary">
+                    <div class="card-body">
+                        <h5 class="card-title text-center">
+                            {{title}}
+                        </h5>
+                        <div class="card card-body my-0">
+                            <div class="card-header justify-content-center align-items-center">
+                                System details:
+                            </div>
+                            <ul class="list-group-flush">
+                                {% for key in m.sys_details.keys() %}
+                                    <li class="list-group-item">{{ key }}: {{ m.sys_details.get(key) }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card my-3 border border-primary">
+                    <div class="card-header">Console:</div>
+                    <div class="card-body">
+                        <div class="card my-0">
+                            <div class="card-body bg-dark">
+                                <p class="text-light" style="height: 400px; width: 100%; overflow: auto" id="console">$> </p>
+                            </div>
+                        </div>
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" placeholder="Command"
+                                   aria-label="Command" aria-describedby="console-submit" id="console-input">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary"
+                                        type="button" id="console-submit">Run</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card my-3 border border-primary">
+                    <div class="card-header">Users with access:</div>
+                    <div class="card-body">
+                        <ul class="list-group px-5 mb-4" id="users">
+                            {% for user in u %}
+                                <li class="list-group-item border border-info">{{ user.username }}</li>
+                            {% endfor %}
+                        </ul>
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Username"
+                                   aria-label="Username" aria-describedby="user-submit" id="user-input">
+                            <div class="input-group-append m-0">
+                                <button class="btn btn-outline-secondary" type="button" id="user-submit">Add user</button>
+                            </div>
+                        </div>
+                        <div class="alert alert-danger mb-0 mt-3"
+                             style="display: none;" id="user_access_alert"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+
+    <script type="text/javascript">
+        $(function () {
+            let console_submit = $("#console-submit");
+            console_submit.click(function () {
+                let console_in = $("#console-input");
+                let console = $("#console");
+                console_submit.html('<span class="spinner-border spinner-border-sm"' +
+                    'role="status" aria-hidden="true"></span>Running...');
+                console_submit.prop("disabled", true);
+                if (console.text() === "$> ") {
+                    console.text( "$> " + console_in.val() )
+                } else {
+                    console.html(console.html() + "<br>$> " + console_in.val());
+                }
+                $.ajax({
+                    type: "POST",
+                    url: window.location.pathname+"/command",
+                    data: {"data": console_in.val()},
+                    datatype: "json",
+                    success: function (data) {
+                        console.html( console.html() +"<br>$< "+ data.output );
+                        console_submit.html("Run");
+                        console_submit.prop("disabled", false)
+                    }
+                });
+                console_in.val("")
+            });
+
+            $("#user-submit").click(function () {
+                let alert = $("#user_access_alert");
+                let user_in = $("#user-input");
+                $.ajax({
+                    type: "POST",
+                    url: window.location.pathname+"/add_user",
+                    data: {"data": user_in.val()},
+                    datatype: "json",
+                    success: function (data) {
+                        let text = '<li class="list-group-item border border-info">'+data.username+'</li>';
+                        $("#users").append(text);
+                        alert.hide()
+                    },
+                    error: function (data) {
+                        let JSON = $.parseJSON(data.responseText);
+                        alert.text(JSON.error);
+                        alert.show()
+                    }
+                });
+                user_in.val()
+            });
+        });
+    </script>
+
+{% endblock %}

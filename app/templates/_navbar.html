@@ -1,0 +1,50 @@
+<nav class="navbar navbar-dark bg-dark">
+    <div class="pl-md-3">
+        <a class="navbar-brand display-4" style="font-size: 30px" href="/">Conduit</a>
+    </div>
+    <div class="pr-md-3">
+        <ul class="nav navbar-nav navbar-right d-flex flex-row-reverse">
+            {% if current_user.is_authenticated %}
+                <div class="btn">
+                    <li class="pull-left">
+                        <a class="btn bg-smoke btn-outline-primary" href="/dashboard/u/{{ user.id }}">
+                            <span>
+                                Dashboard
+                                <i class="fa fa-home fa-6x"></i>
+                                {% if current_user.pending_machines.__len__() > 0 %}
+                                    <span class="badge badge-danger">{{ current_user.pending_machines.__len__() }}</span>
+                                {% else %}
+                                    <span class="badge badge-success">0</span>
+                                {% endif %}
+                            </span>
+                        </a>
+                    </li>
+                    <li class="pull-right pl-sm-2">
+                        <a class="btn bg-smoke btn-outline-primary" href="/auth/logout">
+                            <span>
+                                Logout <i class="fa fa-home fa-6x"></i>
+                            </span>
+                        </a>
+                    </li>
+                </div>
+            {% else %}
+                <div>
+                    {% if page != "sign_in" %}
+                        {% if next %}
+                            <li class="pull-right pl-sm-2"><a class="btn bg-smoke btn-outline-primary" href="/auth/login?next={{ next }}">Sign in <i class="fas fa-sign-in-alt"></i></a></li>
+                        {% else %}
+                            <li class="pull-right pl-sm-2"><a class="btn bg-smoke btn-outline-primary" href="/auth/login">Sign in <i class="fas fa-sign-in-alt"></i></a></li>
+                        {% endif %}
+                    {% endif %}
+                    {% if page != "register" %}
+                        {% if next %}
+                            <li class="pull-left"><a class="btn bg-smoke btn-outline-primary" href="/auth/register?next={{ next }}">Register <i class="fa fa-user-plus"></i></a>
+                        {% else %}
+                            <li class="pull-left"><a class="btn bg-smoke btn-outline-primary" href="/auth/register">Register <i class="fa fa-user-plus"></i></a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            {% endif %}
+        </ul>
+    </div>
+</nav>

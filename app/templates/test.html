@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% include "_navbar.html" %}
+
+{% block container %}
+
+    <div class="row-fluid">
+        <div class="accordian-toggle">
+            <div class="span1">1</div>
+            <div class="span2">FName</div>
+            <div class="span3">LName</div>
+            <div class="span3">@</div>
+        </div>
+    </div>
+    <div id="collapseThree" class="row-fluid collapse in">
+        <div class="span1"></div>
+        <div class="span9">
+            More stuff down here
+        </div>
+    </div>
+
+{% endblock %}

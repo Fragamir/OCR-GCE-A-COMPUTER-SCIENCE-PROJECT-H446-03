@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% include "_navbar.html" %}
+
+{% block container %}
+
+    <div class="container d-flex h-100 justify-content-center">
+        <div class="row justify-content-center align-items-center h-100">
+            {% if not current_user.is_anonymous %}
+                <h1 class="display-1 mt-lg-5">Welcome back, {{ current_user.pref_name }}!</h1>
+            {% else %}
+                <h1 class="display-1">Welcome!</h1>
+            {% endif %}
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script type="text/javascript">
+        $('html,body').animate({ scrollTop: 9999 }, 'slow');
+    </script>
+{% endblock %}

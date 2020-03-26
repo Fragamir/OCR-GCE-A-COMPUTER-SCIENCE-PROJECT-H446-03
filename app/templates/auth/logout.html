@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% include "_navbar.html" %}
+
+{% block container %}
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <h1 class="display-1 text-center">Logout?</h1>
+        </div>
+        <div class="row justify-content-center pr-5">
+            <div class="btn btn-success" id="return">Return to dashboard</div>
+            <div class="btn btn-danger ml-1" id="logout">Logout</div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+
+    <script type="text/javascript">
+        $("#return").click(function() {
+            window.location.href = "../dashboard/u/{{ user.id }}"
+        });
+
+        $("#logout").click(function() {
+            {% if next %}
+                window.location.href = window.location.href + "&logout=True";
+            {% else %}
+                window.location.href = "/";
+            {% endif %}
+        });
+    </script>
+
+{% endblock %}

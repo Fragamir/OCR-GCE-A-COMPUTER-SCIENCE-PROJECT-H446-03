@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+window.onload = function () {
+
+let dataSeries1 = [];
+let dataSeries2 = [];
+let dataSeries3 = [];
+
+let options = {
+	exportEnabled: true,
+	animationEnabled: true,
+	title:{
+        {% if machine.nickname %}
+		text: "Usage statistics for machine: {{ machine.nickname }}"
+        {% else %}
+        text: "Usage statistics for machine: #{{ machine.id }}"
+        {% endif %}
+	},
+	axisX: {
+		title: "Time"
+	},
+	axisY: [{
+		title: "Memory usage",
+		titleFontColor: "#4F81BC",
+		lineColor: "#4F81BC",
+		labelFontColor: "#4F81BC",
+		tickColor: "#4F81BC",
+		includeZero: false,
+        suffix: "%"
+	},{
+	    title: "CPU usage",
+        titleFontColor: "#C0504E",
+        lineColor: "#C0504E",
+        labelFontColor: "#C0504E",
+        tickColor: "#C0504E",
+        includeZero: false,
+        suffix: "%"
+    }],
+	axisY2: {
+		title: "Disk usage",
+		titleFontColor: "#32C030",
+		lineColor: "#32C030",
+		labelFontColor: "#32C030",
+		tickColor: "#32C030",
+		includeZero: false,
+        suffix: "%"
+	},
+	toolTip: {
+		shared: true
+	},
+	legend: {
+		cursor: "pointer",
+		itemclick: toggleDataSeries
+	},
+	data: [{
+		type: "spline",
+		name: "CPU usage",
+        axisYIndex: 1,
+        xValueType: "dateTime",
+		showInLegend: true,
+		dataPoints: dataSeries1
+	},
+	{
+		type: "spline",
+		name: "Disk usage",
+		axisYIndex: 0,
+        xValueType: "dateTime",
+		showInLegend: true,
+		dataPoints: dataSeries2
+	},
+    {
+        type: "spline",
+        name: "Memory usage",
+        axisYType: "secondary",
+        xValueType: "dateTime",
+        showInLegend: true,
+        dataPoints: dataSeries3
+    }]
+};
+const chartContainer = $("#chartContainer");
+chartContainer.CanvasJSChart(options);
+const chart = chartContainer.CanvasJSChart();
+
+function toggleDataSeries(e) {
+	e.dataSeries.visible = !(typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible);
+	e.chart.render();
+}
+
+let newDataCount = 10;
+
+function addData(data) {
+    if (newDataCount !== 1) {
+        $.each(data, function(key, value) {
+            dataSeries1.push({x: value[0], y: value[1]});
+            dataSeries2.push({x: value[0], y: value[2]});
+            dataSeries3.push({x: value[0], y: value[3]});
+        });
+        newDataCount = 1;
+    } else {
+        dataSeries1.push({x: data[9][0], y: data[9][1]});
+        dataSeries1.shift();
+        dataSeries2.push({x: data[9][0], y: data[9][2]});
+        dataSeries2.shift();
+        dataSeries3.push({x: data[9][0], y: data[9][3]});
+        dataSeries3.shift();
+    }
+    chart.render();
+    setTimeout(updateData, 15000)
+
+}
+
+function updateData() {
+    $.getJSON("../{{ machine.id }}").done(addData)
+}
+
+updateData();
+
+}
+</script>
+</head>
+<body>
+<div id="chartContainer" style="height: 370px; width: 100%;"></div>
+<script src="https://canvasjs.com/assets/script/jquery-1.11.1.min.js"></script>
+<script src="https://canvasjs.com/assets/script/jquery.canvasjs.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% import "macros.html" as macros %}
+
+{% block container %}
+    {{ macros.render_form(form, action_text="Submit", class_="", btn_class="") }}
+{% endblock %}
